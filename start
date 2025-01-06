@@ -1,10 +1,9 @@
-#!/bin/bash
 sudo mkdir -p appdata/space-engineers/bins/SpaceEngineersDedicated
 sudo mkdir -p appdata/space-engineers/bins/steamcmd
 sudo mkdir -p appdata/space-engineers/config/World
 sudo mkdir -p appdata/space-engineers/config/Plugins
 if [ ! -f ./appdata/space-engineers/config/World/Sandbox.sbc ]; then
-    echo "World not found, initalizing empty star system..."
+    echo "World not found, initalizing backup star system..."
     sudo unzip -n star-system.zip -d ./appdata/space-engineers/config
 fi
 
@@ -14,5 +13,5 @@ if [ "$(stat -c '%u' appdata)" != "1000" ]; then
     sudo chown -R 1000:1000 appdata
 fi
 
-sudo docker-compose up -d 
+sudo docker-compose up -d --force-recreate
 sudo docker-compose logs -f
