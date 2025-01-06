@@ -1,17 +1,56 @@
+#!/bin/bash
+
+echo "Starting setup for Space Engineers Dedicated Server..."
+
+# Create necessary directories
+echo "Creating required directories..."
 sudo mkdir -p appdata/space-engineers/bins/SpaceEngineersDedicated
+echo "Created directory: appdata/space-engineers/bins/SpaceEngineersDedicated"
+
 sudo mkdir -p appdata/space-engineers/bins/steamcmd
+echo "Created directory: appdata/space-engineers/bins/steamcmd"
+
 sudo mkdir -p appdata/space-engineers/config/World
+echo "Created directory: appdata/space-engineers/config/World"
+
 sudo mkdir -p appdata/space-engineers/config/Plugins
+echo "Created directory: appdata/space-engineers/config/Plugins"
+
+# Check for World/Sandbox.sbc and initialize backup if not found
 if [ ! -f ./appdata/space-engineers/config/World/Sandbox.sbc ]; then
-    echo "World not found, initalizing backup star system..."
-    sudo unzip -n star-system.zip -d ./appdata/space-engineers/config
+    echo "World configuration not found. Initializing backup star system..."
+    if sudo unzip -n star-system.zip -d ./appdata/space-engineers/config; then
+        echo "Backup star system initialized successfully."
+    else
+        echo "Failed to initialize backup star system. Exiting."
+        exit 1
+    fi
+else
+    echo "World configuration found: Sandbox.sbc exists."
 fi
 
-#container executes server as 1000:1000
+# Ensure proper ownership for the container
 if [ "$(stat -c '%u' appdata)" != "1000" ]; then
-    echo "Setting owner of appdata to UID 1000"
-    sudo chown -R 1000:1000 appdata
+    echo "Incorrect ownership detected for appdata. Setting owner to UID 1000..."
+    if sudo chown -R 1000:1000 appdata; then
+        echo "Ownership updated successfully to UID 1000."
+    else
+        echo "Failed to update ownership for appdata. Exiting."
+        exit 2
+    fi
+else
+    echo "Ownership of appdata is already set to UID 1000."
 fi
 
-sudo docker-compose up -d --force-recreate
+# Start Docker Compose services
+echo "Starting Docker Compose services..."
+if sudo docker-compose up -d --force-recreate; then
+    echo "Docker Compose services started successfully."
+else
+    echo "Failed to start Docker Compose services. Exiting."
+    exit 3
+fi
+
+# Tail Docker logs
+echo "Attaching to Docker Compose logs. Press Ctrl+C to exit log view."
 sudo docker-compose logs -f
